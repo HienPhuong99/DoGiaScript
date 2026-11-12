@@ -1,6 +1,5 @@
 # bí mật và dữ liệu riêng: không đưa lên GitHub
 config.json
-webhook.gs
 sheet-cache.json
 # sinh ra khi chạy
 .venv/

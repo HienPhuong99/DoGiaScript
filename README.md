@@ -9,14 +9,13 @@ Toàn bộ cấu hình (web nào bật, cấu hình nào theo dõi, từ khóa l
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 copy config.example.json config.json
-copy webhook.example.gs webhook.gs
 ```
 
-1. Tự đặt một chuỗi bí mật ngẫu nhiên, điền vào `token` trong `config.json` và `TOKEN` trong `webhook.gs` (hai nơi phải giống nhau).
+1. Tự đặt một chuỗi bí mật ngẫu nhiên (từ 32 ký tự), điền vào `token` trong `config.json`.
 2. Mở Google Sheet → Tiện ích mở rộng → Apps Script, dán `webhook.gs`, triển khai dạng "Ứng dụng web" (Thực thi bằng: Tôi; Quyền truy cập: Bất kỳ ai).
-3. Dán URL ứng dụng web vào `webhook_url` trong `config.json`.
+3. Dán URL ứng dụng web vào `webhook_url` trong `config.json`, rồi chạy `dogia.py` ngay: lần gọi đầu tiên đăng ký token với webhook.
 
-`config.json` và `webhook.gs` chứa bí mật nên đã nằm trong `.gitignore`.
+`config.json` chứa bí mật nên đã nằm trong `.gitignore`.
 
 ## Chạy
 

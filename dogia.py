@@ -39,7 +39,7 @@ def fetch(url):
 RAMS = {8, 16, 18, 24, 32, 36, 48, 64, 96, 128}
 SSDS = {256, 512, 1024, 2048, 4096, 8192}
 CHIP = re.compile(r"\bm([1-6])(?:\s*-?\s*(pro|max|ultra))?\b")
-USED = re.compile(r"\bcũ\b|\bcu\b|used|like\s*-?new|likenew|\b9\d\s*%|lướt|\bopen\b|no\s*-?box|refurbished|đã kích hoạt|da kich hoat|trầy|second")
+USED = re.compile(r"\bcũ\b|\bcu\b|used|like\s*-?new|likenew|\b9\d\s*%|lướt|\bopen(?:\s*-?\s*box)?\b|no\s*-?box|refurbished|đã kích hoạt|da kich hoat|trầy|second")
 NEW = re.compile(r"new\s*-?seal|nguyên seal|chính hãng|mới 100|\bnew\b|\bmới\b")
 
 
@@ -381,9 +381,12 @@ def build_ops(data, found, status, errors, st):
             lowest[r[6]] = min(lowest.get(r[6], 10**12), num(r[17]))
         if r[4] == "Web tự dò":
             latest[(r[5], r[20], r[6])] = (i, r[0], num(r[17]))
-    new_rows, deals = [], []
-    for f in found:
+    new_rows, deals, best = [], [], {}
+    for f in found:  # một máy có thể hiện ở 2 trang danh mục với 2 giá (TGDĐ) -> chỉ giữ giá thấp nhất
         key = (f["source"], f["url"], f["code"])
+        if key not in best or f["price"] < best[key]["price"]:
+            best[key] = f
+    for key, f in best.items():
         note = f["note"]
         if key in latest:
             i, tin, old = latest[key]
@@ -459,6 +462,7 @@ def test():
     assert condition("MacBook Pro 14 M1 Pro 32GB", "https://q/x.html", "https://q/collections/macbook-pro-m1-cu") == "Cũ"
     assert condition("MacBook Air M4 Newseal", "https://x/a", "https://x/macbook-cu") == "Mới"
     assert condition("M4 16GB 512GB (Open) | MacBook Air M4 13 inch – New", "https://x/a") == "Cũ"
+    assert condition("MacBook Air 2025 13 inch M4 16GB RAM 512GB SSD – Openbox", "https://x/a") == "Cũ"
     assert condition("M4 / 16GB / 512GB | MACBOOK AIR 13 INCH M4 – 2025", "https://x/macbook-air-13-inch-m4-2025/") == "Mới"
     kws = [("icloud", "Bỏ qua"), ("thay pin", "Gắn cờ")]
     assert keyword_hits("Máy không dính icloud, đã thay pin", kws) == (False, ["thay pin"])
@@ -472,9 +476,9 @@ def test():
     data = {"Nhật ký": [["ID"], row("TIN-001", old, 30e6, "u1"), row("TIN-002", old, 31e6, "u2"), row("TIN-003", now, 29e6, "u3")], "Web dò giá": [["h"], ["A", "a.com", "Cũ", "Có"]]}
     f = lambda price, url: {"source": "A", "code": "X", "chip": "", "cpugpu": "", "ram": 32, "ssd": 512, "screen": 14, "cond": "Cũ", "list": price, "price": price,
                             "promo": "", "seller": "A", "url": url, "profile": "", "flags": "", "note": ""}
-    ops, new_rows, deals = build_ops(data, [f(31_000_000, "u2"), f(28_000_000, "u3"), f(40_000_000, "u4")], {0: ("OK", 3)}, [], {"deal": 32_000_000, "pct": 0.03, "window": 14})
+    ops, new_rows, deals = build_ops(data, [f(31_000_000, "u2"), f(28_000_000, "u3"), f(41_000_000, "u4"), f(40_000_000, "u4")], {0: ("OK", 3)}, [], {"deal": 32_000_000, "pct": 0.03, "window": 14})
     assert ops[0]["values"] == [[old, "Không"], [now, "Có"], [now, "Không"]], ops[0]
-    assert [r[0] for r in new_rows] == ["TIN-003", "TIN-004"] and len(deals) == 1 and deals[0][2] == 28_000_000, (new_rows, deals)
+    assert [(r[0], r[17]) for r in new_rows] == [("TIN-003", 28_000_000), ("TIN-004", 40_000_000)] and len(deals) == 1 and deals[0][2] == 28_000_000, (new_rows, deals)
     print("OK")
 
 
