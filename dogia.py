@@ -142,7 +142,7 @@ def cards(seeds):
                 cands = [c for c in (norm(e.text_content()) for e in node.iter("a", "h1", "h2", "h3", "h4", "h5", "p", "span", "div", "strong")) if ok(c)]
                 own = norm(a.text_content())  # chữ của chính link là tiêu đề đầy đủ nhất, trừ khi nó ôm cả giá
                 title = own if ok(own) else min(cands, key=len) if cands else norm(PRICE.sub(" ", own))[:160]
-                href = urljoin(url, a.get("href"))
+                href = re.sub(r"[?&]ref=[\w-]+$", "", urljoin(url, a.get("href")))  # QMac gắn ?ref=featured lúc có lúc không -> cùng 1 máy ra 2 URL
                 if (title, min(prices)) in seen:
                     continue
                 seen.add((title, min(prices)))
